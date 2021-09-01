@@ -1,8 +1,15 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+
 import Swal from 'sweetalert2';
+
+import { Store } from '@ngrx/store';
+import { AppState } from '../../app.reducer';
+import * as ui from '../../shared/ui.actions';
+
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-register',
@@ -10,13 +17,16 @@ import Swal from 'sweetalert2';
   styles: [
   ]
 })
-export class RegisterComponent implements OnInit {
+export class RegisterComponent implements OnInit, OnDestroy {
 
   registroForm: FormGroup;
+  cargando: boolean = false;
+  uiSubscription: Subscription;
 
   constructor( private fb: FormBuilder,
                private authService: AuthService,
-               private router: Router ) { }
+               private router: Router,
+               private store: Store<AppState> ) { }
 
   ngOnInit(): void {
     this.registroForm = this.fb.group({
@@ -24,6 +34,14 @@ export class RegisterComponent implements OnInit {
       correo: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required]]
     });
+
+    this.uiSubscription = this.store.select('ui').subscribe(resp => {
+      this.cargando = resp.isLoading;
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.uiSubscription.unsubscribe();
   }
 
   crearUsuario() {
@@ -32,17 +50,18 @@ export class RegisterComponent implements OnInit {
 
     const { nombre, correo, password } = this.registroForm.value;
 
-    Swal.fire({
-      title: 'Espere por favor',
-      didOpen: () => {
-        Swal.showLoading();
-      }
-    });
+    this.store.dispatch(ui.isLoading());
+    // Swal.fire({
+    //   title: 'Espere por favor',
+    //   didOpen: () => {
+    //     Swal.showLoading();
+    //   }
+    // });
 
     this.authService.crearUsuario(  nombre, correo, password )
               .then(credenciales => {
-                // console.log(credenciales);
-                Swal.close();
+                this.store.dispatch(ui.stopLoading());
+                // Swal.close();
                 this.router.navigateByUrl('/');
               })
               .catch( error => {
