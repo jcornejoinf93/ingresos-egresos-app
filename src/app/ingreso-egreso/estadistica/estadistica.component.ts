@@ -7,6 +7,7 @@ import { Store } from '@ngrx/store';
 import { ChartType } from 'chart.js';
 import { Label, MultiDataSet } from 'ng2-charts';
 import { AppState } from '../../app.reducer';
+import { AppStateWithIE } from '../ingreso-egreso.reducer';
 
 @Component({
   selector: 'app-estadistica',
@@ -28,7 +29,7 @@ export class EstadisticaComponent implements OnInit {
   public doughnutChartData: MultiDataSet = [[]];
   public doughnutChartType: ChartType = 'doughnut';
 
-  constructor( private store: Store<AppState> ) { }
+  constructor( private store: Store<AppStateWithIE> ) { }
 
   ngOnInit(): void {
     this.store.select('ingresosEgresos')
